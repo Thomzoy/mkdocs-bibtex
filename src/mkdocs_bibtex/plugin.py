@@ -26,6 +26,8 @@ class BibTexPlugin(BasePlugin):
         bib_file (string): path or url to a single bibtex file for entries,
                            url example: https://api.zotero.org/*/items?format=bibtex
         bib_dir (string): path to a directory of bibtex files for entries
+        recursive (bool): recusrively search for all .bib files starting from bib_dir,
+                          default to false
         bib_command (string): command to place a bibliography relevant to just that file
                               defaults to \bibliography
         bib_by_default (bool): automatically appends bib_command to markdown pages
@@ -38,6 +40,7 @@ class BibTexPlugin(BasePlugin):
     config_scheme = [
         ("bib_file", config_options.Type(str, required=False)),
         ("bib_dir", config_options.Dir(exists=True, required=False)),
+        ("recursive", config_options.Type(bool, default=False)),
         ("bib_command", config_options.Type(str, default="\\bibliography")),
         ("bib_by_default", config_options.Type(bool, default=True)),
         ("full_bib_command", config_options.Type(str, default="\\full_bibliography")),
@@ -66,7 +69,10 @@ class BibTexPlugin(BasePlugin):
             else:
                 bibfiles.append(self.config["bib_file"])
         elif self.config.get("bib_dir", None) is not None:
-            bibfiles.extend(Path(self.config["bib_dir"]).glob("*.bib"))
+            if self.config["recursive"]:
+                bibfiles.extend(Path(self.config["bib_dir"]).rglob("*.bib"))
+            else:
+                bibfiles.extend(Path(self.config["bib_dir"]).glob("*.bib"))
         else:  # pragma: no cover
             raise Exception("Must supply a bibtex file or directory for bibtex files")
 
